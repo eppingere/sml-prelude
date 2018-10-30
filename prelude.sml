@@ -1,23 +1,24 @@
 
+infix |>
+fun x |> f = f x
+
+infixr $
+fun f $ x = f x
+
 (* uninfixed composition of functions *)
 fun comp f g = f o g
 
 (* option type for being either Left of 'a or Right of b *)
 datatype ('a, 'b) Either = Left of 'a | Right of 'b
 
-(* append for list *)
-
-infix ++
-val ++ = @
-
 (* gets the head of a list *)
 exception noHeadOfEmptyList
 fun head [] = raise noHeadOfEmptyList
-  | head x::_ = x
+  | head (x::_) = x
 
 exception noTailOfEmptyList
 fun tail [] = raise noTailOfEmptyList
-  | tail _::T = T
+  | tail (_::T) = T
 
 exception emptyList
 fun last [] = raise emptyList
@@ -26,28 +27,38 @@ fun last [] = raise emptyList
 
 fun init [] = raise emptyList
   | init [x] = []
-  | init x::xs = x::(init xs)
+  | init (x::xs) = x::(init xs)
 
 fun uncons [] = NONE
-  | uncons x::xs = SOME(x, xs)
+  | uncons (x::xs) = SOME(x, xs)
 
 fun intersperse _ [] = []
-  | intersperse y x::xs = x::y::(intersperse y xs)
+  | intersperse y (x::xs) = x::y::(intersperse y xs)
 
-val concat = List.map (op@)
+val concat = List.map (op @)
 
-val intercalate = intersperse |> concat
+fun intercalate y xs = concat (intersperse y xs)
 
 fun nonEmptySubsequences [] = []
-  | nonEmptySubsequences [x] = [[x]]
-  | nonEmptySubsequences x::xs =
-      let
-        val rec = nonEmptySubsequences xs
-      in
-        rec @ (List.map (fn a => x::a) rec)
-      end
+  | nonEmptySubsequences (x::xs) =
+    let
+      val res = nonEmptySubsequences xs
+    in
+      (List.map (fn a => x::a) res) @ res
+    end
 
 fun subsequences xs = []::(nonEmptySubsequences xs)
+
+
+fun sort _ [] = []
+  | sort _ [x] = []
+  | sort cmp (x::xs) =
+    let
+      val left = List.filter (fn i => cmp(i, x) = LESS) xs
+      val right = List.filter (fn i => cmp(i, x) <> LESS) xs
+    in
+      (sort cmp left) @ x::(sort cmp right)
+    end
 
 
 
